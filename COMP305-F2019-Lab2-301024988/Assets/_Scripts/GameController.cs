@@ -1,9 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.IO;
+using System.Linq;
 
 
 public class GameController : MonoBehaviour
@@ -41,6 +43,11 @@ public class GameController : MonoBehaviour
 
     [Header("Game Settings")]
     public ScoreBoard scoreBoard;
+
+    [Header("Scene Settings")]
+    public SceneSettings activeSceneSettings;
+    public List<SceneSettings> sceneSettings;
+
     // public properties
     public int Lives
     {
@@ -52,16 +59,18 @@ public class GameController : MonoBehaviour
         set
         {
             _lives = value;
-            if(_lives < 1)
+            scoreBoard.lives = _lives;
+
+            if (_lives < 1)
             {
-                
+
                 SceneManager.LoadScene("End");
             }
             else
             {
                 livesLabel.text = "Lives: " + _lives;
             }
-           
+
         }
     }
 
@@ -75,11 +84,11 @@ public class GameController : MonoBehaviour
         set
         {
             _score = value;
-
+            scoreBoard.score = _score;
 
             if (scoreBoard.highScore < _score)
             {
-                scoreBoard.highScore = _score;          
+                scoreBoard.highScore = _score;
             }
             scoreLabel.text = "Score: " + _score;
         }
@@ -106,36 +115,44 @@ public class GameController : MonoBehaviour
 
     private void SceneConfiguration()
     {
-        switch (SceneManager.GetActiveScene().name)
-        {
-            case "Start":
-                scoreLabel.enabled = false;
-                livesLabel.enabled = false;
-                highScoreLabel.enabled = false;
-                endLabel.SetActive(false);
-                restartButton.SetActive(false);
-                activeSoundClip = SoundClip.NONE;
-                break;
-            case "Main":
-                highScoreLabel.enabled = false;
-                startLabel.SetActive(false);
-                startButton.SetActive(false);
-                endLabel.SetActive(false);
-                restartButton.SetActive(false);
-                activeSoundClip = SoundClip.ENGINE;
-                break;
-            case "End":
-                scoreLabel.enabled = false;
-                livesLabel.enabled = false;
-                startLabel.SetActive(false);
-                startButton.SetActive(false);
-                activeSoundClip = SoundClip.NONE;
-                highScoreLabel.text = "High Score: " + scoreBoard.highScore;
-                break;
-        }
+        // selects the current scene
+        Scene sceneToCompare = (Scene)Enum.Parse(typeof(Scene),
+                    SceneManager.GetActiveScene().name.ToUpper());
 
-        Lives = 5;
-        Score = 0;
+        // compares the sttings list with current scene
+        var query = from settings in sceneSettings
+                    where settings.scene == sceneToCompare
+                    select settings;
+
+        // sets the appropriate settings for the loaded scene
+        activeSceneSettings = query.ToList().First();
+
+
+
+        {
+            //initialize lives and score at main scene
+            if(activeSceneSettings.scene == Scene.MAIN)
+            {
+                Lives = 5;
+                Score = 0;
+            }
+
+            // assigns all setting in each scene
+            activeSoundClip = activeSceneSettings.activeSoundClip;
+            scoreLabel.enabled = activeSceneSettings.scoreLabelEnabled;
+            livesLabel.enabled = activeSceneSettings.livesLabelEnabled;
+            highScoreLabel.enabled = activeSceneSettings.highScoreLabelEnabled;
+            startLabel.SetActive(activeSceneSettings.startLabelActive);
+            endLabel.SetActive(activeSceneSettings.endLabelActive);
+            startButton.SetActive(activeSceneSettings.startButtonActive);
+            restartButton.SetActive(activeSceneSettings.restartButtonActive);
+           
+            // assign text values to labels
+            livesLabel.text = "Lives: " + scoreBoard.lives;
+            scoreLabel.text = "Score: " + scoreBoard.score;
+            highScoreLabel.text = "High Score: " + scoreBoard.highScore;
+
+        }
 
 
         if ((activeSoundClip != SoundClip.NONE) && (activeSoundClip != SoundClip.NUM_OF_CLIPS))
@@ -158,12 +175,6 @@ public class GameController : MonoBehaviour
         }
 
         Instantiate(island);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     // Event Handlers
