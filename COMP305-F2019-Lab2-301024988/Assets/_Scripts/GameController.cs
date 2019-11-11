@@ -7,6 +7,8 @@ using UnityEngine.SceneManagement;
 using System.IO;
 using System.Linq;
 
+//Jinkyu Choi
+//301024988
 
 public class GameController : MonoBehaviour
 {

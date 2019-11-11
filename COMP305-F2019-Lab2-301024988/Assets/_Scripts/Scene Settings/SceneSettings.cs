@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//Jinkyu Choi
+//301024988
+
 [CreateAssetMenu(fileName = "SceneSettings", menuName = "Scene/Settings")]
 [System.Serializable]
 public class SceneSettings : ScriptableObject
